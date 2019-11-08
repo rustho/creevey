@@ -117,13 +117,5 @@ function serializeStory(story: StoryInput | StoryContext): CreeveyStory {
 
   // TODO serialize param `skip` regexp
 
-  if (creevey && creevey._seleniumTests) {
-    const tests = creevey._seleniumTests;
-    Object.keys(tests).forEach(testName => {
-      // @ts-ignore
-      tests[testName] = tests[testName].toString();
-    });
-  }
-
   return { id, name, kind, params: creevey };
 }

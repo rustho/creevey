@@ -1,6 +1,8 @@
 import { API as StorybookAPI } from "@storybook/api";
 import { Worker as ClusterWorker } from "cluster";
 import { Context } from "mocha";
+import Chai from "chai";
+import Selenium from "selenium-webdriver";
 
 export type StoriesRaw = StorybookAPI extends { setStories: (stories: infer SS) => void } ? SS : never;
 
@@ -117,7 +119,10 @@ export type SkipOptions = string | SkipOption | SkipOption[];
 export interface CreeveyStoryParams {
   captureElement?: string;
   skip?: SkipOptions;
-  _seleniumTests?: {
+  _seleniumTests?: (
+    selenium: typeof Selenium,
+    chai: typeof Chai
+  ) => {
     [name: string]: (this: Context) => void;
   };
   // tests: {

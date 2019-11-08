@@ -1,7 +1,7 @@
 import { PNG } from "pngjs";
-import { expect } from "chai";
+import chai, { expect } from "chai";
 import { Suite, Context, Test } from "mocha";
-import { By, WebDriver } from "selenium-webdriver";
+import selenium, { By, WebDriver } from "selenium-webdriver";
 import { CreeveyStories, isDefined, Test as CreeveyTest } from "../../types";
 import { shouldSkip } from "../../utils";
 import { createHash } from "crypto";
@@ -171,7 +171,7 @@ export function convertStories(
   Object.values(stories)
     .filter(isDefined)
     .forEach(story => {
-      const { skip, captureElement, _seleniumTests: tests } = story.params || {};
+      const { skip, captureElement, _seleniumTests: tests, __filename } = story.params || {};
       const skipReason = skip ? shouldSkip(story.name, browserName, skip) : false;
       const kindSuite = findOrCreateSuite(story.kind, rootSuite);
 
@@ -191,14 +191,22 @@ export function convertStories(
 
       // TODO params from storybook 3.x - 5.x
       // TODO Check if test already exists
-      // TODO tests as a function
 
-      Object.keys(tests).forEach(testName => {
+      // @ts-ignore
+      console.log(__filename);
+
+      let parsedTests: { [name: string]: (this: Context) => void } = {};
+      try {
+        // @ts-ignore
+        parsedTests = eval(`(${tests})`)(selenium, chai);
+      } catch (_) {
+        // NOTE tests maybe stringified as shorthand object method
+        parsedTests = eval(`({${tests}})`)._seleniumTests(selenium, chai);
+      }
+
+      Object.entries(parsedTests).forEach(([testName, testFn]) => {
         const test = createCreeveyTest([browserName, testName, story.name, story.kind], skipReason);
         creeveyTests[test.id] = test;
-
-        //@ts-ignore
-        const testFn = eval(tests[testName]);
 
         storySuite.addTest(createTest(testName, testFn, skipReason));
       });
